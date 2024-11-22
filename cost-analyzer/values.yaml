@@ -230,15 +230,15 @@ global:
   platforms:
     # Deploying to OpenShift (OCP) requires enabling this option.
     openshift:
-      enabled: false  # Deploy Kubecost to OpenShift.
+      enabled: true  # Deploy Kubecost to OpenShift.
       route:
-        enabled: false  # Create an OpenShift Route.
+        enabled: true  # Create an OpenShift Route.
         annotations: {}  # Add annotations to the Route.
         # host: kubecost.apps.okd4.example.com  # Add a custom host for your Route.
       # Create Security Context Constraint resources for the DaemonSets requiring additional privileges.
       scc:
-        nodeExporter: false  # Creates an SCC for Prometheus Node Exporter. This requires Node Exporter be enabled.
-        networkCosts: false  # Creates an SCC for Kubecost network-costs. This requires network-costs be enabled.
+        nodeExporter: true  # Creates an SCC for Prometheus Node Exporter. This requires Node Exporter be enabled.
+        networkCosts: true  # Creates an SCC for Kubecost network-costs. This requires network-costs be enabled.
       # When OpenShift is enabled, the following securityContext will be applied to all resources unless they define their own.
       securityContext:
         runAsNonRoot: true
@@ -842,7 +842,7 @@ persistentVolume:
   size: 32Gi
   dbSize: 32.0Gi
   enabled: true  # Note that setting this to false means configurations will be wiped out on pod restart.
-  # storageClass: "-" #
+  storageClass: "aws-efs-sc" #
   # existingClaim: kubecost-cost-analyzer # a claim in the same namespace as kubecost
   labels: {}
   annotations: {}
@@ -1200,7 +1200,7 @@ prometheus:
       ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
       ##   GKE, AWS & OpenStack)
       ##
-      # storageClass: "-"
+      storageClass: "aws-efs-sc"
 
       ## Prometheus server data Persistent Volume Binding Mode
       ## If defined, volumeBindingMode: <volumeBindingMode>
@@ -2292,7 +2292,7 @@ prometheus:
 ## Optional daemonset to more accurately attribute network costs to the correct workload
 ## https://docs.kubecost.com/install-and-configure/advanced-configuration/network-costs-configuration
 networkCosts:
-  enabled: false
+  enabled: true
   image:
     repository: gcr.io/kubecost1/kubecost-network-costs
     tag: v0.17.6
@@ -2304,7 +2304,7 @@ networkCosts:
   # The Service is annotated with prometheus.io/scrape: "true" to automatically get picked up by the prometheus config.
   # NOTE: Setting this option to true and leaving the above extraScrapeConfig "job_name: kubecost-networking" configured will cause the
   # NOTE: pods to be scraped twice.
-  prometheusScrape: false
+  prometheusScrape: true
   # Traffic Logging will enable logging the top 5 destinations for each source
   # every 30 minutes.
   trafficLogging: true
@@ -2607,10 +2607,10 @@ kubecostAggregator:
   dbTrimMemoryOnClose: true
 
   persistentConfigsStorage:
-    storageClass: ""  # default storage class
+    storageClass: "aws-efs-sc"  # default storage class
     storageRequest: 1Gi
   aggregatorDbStorage:
-    storageClass: ""  # default storage class
+    storageClass: "aws-efs-sc"  # default storage class
     storageRequest: 128Gi
 
   resources: {}
@@ -3320,7 +3320,14 @@ costEventsAudit:
 # # These configs can also be set from the Settings page in the Kubecost product
 # # UI. Values in this block override config changes in the Settings UI on pod
 # # restart
-# kubecostProductConfigs:
+kubecostProductConfigs:
+  serviceKeySecretName: kubecost-credentials
+  athenaProjectID: '586183866151'
+  athenaBucketName: aws-athena-query-results-kubecost-dot
+  athenaRegion: us-east-1
+  athenaDatabase: athenacurcfn_cloud_costs
+  athenaTable: cloudcosts
+  athenaWorkgroup: primary
 #   # An optional list of cluster definitions that can be added for frontend
 #   # access. The local cluster is *always* included by default, so this list is
 #   # for non-local clusters.
